@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Cuidado</string>
+    <string name="hello">Hola 👋</string>
+    <string name="activities">Actividades</string>
+    <string name="today_activities">Actividades de hoy</string>
+    <string name="new_activity">Nueva actividad</string>
+    <string name="save">Guardar</string>
+    <string name="add_activity">Agregar actividad</string>
+    <string name="history">Historial</string>
+    <string name="profile">Perfil</string>
+    <string name="caring_for">Cuidando a</string>
+    <string name="today_routine">Rutina de hoy</string>
+    <string name="done">Realizado</string>
+    <string name="options">Opciones</string>
+    <string name="name_label">Nombre</string>
+    <string name="hour_label">Hora</string>
+    <string name="repeat_label">Repetir</string>
+    <string name="name_placeholder">Ej. Medicamento</string>
+    <string name="hour_placeholder">Ej. 08:00</string>
+    <string name="maria_routine">Rutina de María</string>
+</resources>
