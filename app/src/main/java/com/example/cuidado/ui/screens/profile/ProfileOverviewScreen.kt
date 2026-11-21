@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.text.font.FontWeight
 
 private enum class ProfileSection { PROFILE, CAREGIVER }
 
@@ -53,6 +55,7 @@ private fun ProfileOverview(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -116,8 +119,14 @@ private fun InfoCard(
 
 @Composable
 private fun InfoRow(label: String, value: String) {
-    Column {
-        Text(label, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(
+            text = label.uppercase(),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
         Text(value, fontSize = 18.sp)
+        HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
     }
 }
