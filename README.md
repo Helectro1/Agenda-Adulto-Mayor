@@ -67,6 +67,9 @@ El sistema implementa una arquitectura en capas basada en **MVVM (Model-View-Vie
 │   activities · activity_logs · profile · mediciones      │
 └──────────────────────────────────────────────────────────┘
 
+```
+---
+
 ## 3. Estructura del Repositorio
 
 Siguiendo prácticas de **Gestión de Configuración de Software (SCM)**, el repositorio centraliza tanto el código fuente como los artefactos de ingeniería vigentes dentro de la carpeta [`docs/`](https://www.google.com/search?q=docs/):
