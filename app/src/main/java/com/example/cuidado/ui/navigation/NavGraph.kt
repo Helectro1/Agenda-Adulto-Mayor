@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import com.example.cuidado.ui.screens.activities.ActivitiesScreen
 import com.example.cuidado.ui.screens.activities.AddActivityScreen
 import com.example.cuidado.ui.screens.home.HomeScreen
+import com.example.cuidado.ui.screens.profile.ProfileOverviewScreen
 
 object Routes {
     const val HOME = "home"
@@ -60,9 +61,7 @@ fun CuidaNavGraph(
         }
 
         composable(Routes.PROFILE) {
-            PlaceholderScreen(
-                title = "Perfil"
-            )
+            ProfileOverviewScreen()
         }
     }
 }

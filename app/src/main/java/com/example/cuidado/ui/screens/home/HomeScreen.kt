@@ -43,6 +43,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel()
 ) {
     val activities by viewModel.activities.collectAsState()
+    val profileName by viewModel.profileName.collectAsState()
 
     Scaffold(
         floatingActionButton = {
@@ -90,7 +91,7 @@ fun HomeScreen(
             // Persona a cuidar
             item {
                 PersonCard(
-                    name = "María",
+                    name = profileName,
                 )
             }
 

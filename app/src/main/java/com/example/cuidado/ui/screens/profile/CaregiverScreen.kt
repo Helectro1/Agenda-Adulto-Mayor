@@ -34,7 +34,6 @@ fun CaregiverScreen(viewModel: ProfileViewModel = viewModel(), onSaved: () -> Un
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
