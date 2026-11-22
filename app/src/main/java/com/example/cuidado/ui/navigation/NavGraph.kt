@@ -7,19 +7,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.cuidado.ui.screens.activities.ActivitiesScreen
 import com.example.cuidado.ui.screens.activities.AddActivityScreen
 import com.example.cuidado.ui.screens.home.HomeScreen
+import com.example.cuidado.ui.screens.mediciones.MedicionesScreen
 import com.example.cuidado.ui.screens.profile.ProfileOverviewScreen
 
 object Routes {
     const val HOME = "home"
     const val ACTIVITIES = "activities"
     const val ADD_ACTIVITY = "add_activity"
+    const val ADD_ACTIVITY_PARAM = "add_activity?activityId={activityId}"
     const val HISTORY = "history"
     const val PROFILE = "profile"
+    const val MEDICIONES = "mediciones"
+
+    fun addActivity(activityId: String? = null): String {
+        return if (activityId != null) "add_activity?activityId=$activityId" else "add_activity"
+    }
 }
 
 @Composable
@@ -35,18 +44,32 @@ fun CuidaNavGraph(
     ) {
 
         composable(Routes.HOME) {
-            HomeScreen()
+            HomeScreen(
+                onAddActivity = {
+                    navController.navigate(Routes.addActivity())
+                }
+            )
         }
 
         composable(Routes.ACTIVITIES) {
             ActivitiesScreen(
                 onAddActivity = {
-                    navController.navigate(Routes.ADD_ACTIVITY)
+                    navController.navigate(Routes.addActivity())
+                },
+                onEditActivity = { activityId ->
+                    navController.navigate(Routes.addActivity(activityId))
                 }
             )
         }
 
-        composable(Routes.ADD_ACTIVITY) {
+        composable(
+            route = Routes.ADD_ACTIVITY_PARAM,
+            arguments = listOf(navArgument("activityId") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
+            })
+        ) {
             AddActivityScreen(
                 onSave = {
                     navController.popBackStack()
@@ -58,6 +81,10 @@ fun CuidaNavGraph(
             PlaceholderScreen(
                 title = "Historial"
             )
+        }
+
+        composable(Routes.MEDICIONES) {
+            MedicionesScreen()
         }
 
         composable(Routes.PROFILE) {

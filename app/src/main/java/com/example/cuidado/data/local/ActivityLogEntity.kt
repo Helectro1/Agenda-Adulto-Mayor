@@ -14,5 +14,6 @@ data class ActivityLogEntity(
     val activityId: String,
     val date: String,
     val status: String,
-    val executionTime: String?
+    val executionTime: String?,
+    val notes: String = ""
 )

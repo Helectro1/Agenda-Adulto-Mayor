@@ -72,6 +72,21 @@ class HomeViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Registra el estado y notas de una actividad para hoy.
+     */
+    fun markActivityStatus(activity: Activity, status: String, notes: String) {
+        viewModelScope.launch {
+            ActivityRepository.markActivityStatus(
+                activityId = activity.id,
+                date = getCurrentDate(),
+                status = status,
+                time = getCurrentTime(),
+                notes = notes
+            )
+        }
+    }
+
     private fun getCurrentDate(): String = dateFormatter.format(Date())
     private fun getCurrentTime(): String = timeFormatter.format(Date())
 }

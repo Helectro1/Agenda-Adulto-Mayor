@@ -17,6 +17,9 @@ interface ActivityDao {
     @Query("SELECT * FROM activities")
     fun getAllActivities(): List<ActivityEntity>
 
+    @Query("SELECT * FROM activities WHERE id = :id LIMIT 1")
+    fun getActivityById(id: String): ActivityEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertActivity(activity: ActivityEntity): Long
 
