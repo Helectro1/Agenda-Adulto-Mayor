@@ -14,18 +14,18 @@
 
 ## Tabla de Contenidos
 
-1. [Problema y Propuesta de Valor](#problema-y-propuesta-de-valor)
-2. [Arquitectura y Stack Tecnológico](#arquitectura-y-stack-tecnológico)
-3. [Estructura del Repositorio (SW Project Folder)](#estructura-del-repositorio-sw-project-folder)
-4. [Módulos Funcionales y Estado](#módulos-funcionales-y-estado)
-5. [Esquema de Base de Datos (Room)](#esquema-de-base-de-datos-room)
-6. [Estrategia de Control de Versiones (Git Flow)](#estrategia-de-control-de-versiones-git-flow)
-7. [Instalación y Ejecución](#instalación-y-ejecución)
-8. [Equipo de Desarrollo y Roles](#equipo-de-desarrollo-y-roles)
+1. [Problema y Propuesta de Valor](#1-problema-y-propuesta-de-valor)
+2. [Arquitectura y Stack Tecnológico](#2-arquitectura-y-stack-tecnológico)
+3. [Estructura del Repositorio](#3-estructura-del-repositorio)
+4. [Módulos Funcionales y Estado](#4-módulos-funcionales-y-estado)
+5. [Esquema de Base de Datos](#5-esquema-de-base-de-datos)
+6. [Estrategia de Control de Versiones](#6-estrategia-de-control-de-versiones)
+7. [Instalación y Ejecución](#7-instalación-y-ejecución)
+8. [Equipo de Desarrollo y Roles](#8-equipo-de-desarrollo-y-roles)
 
 ---
 
-## Problema y Propuesta de Valor
+## 1. Problema y Propuesta de Valor
 
 El cuidado cotidiano de un adulto mayor exige coordinar horarios de medicación, alimentación, higiene, consultas médicas y monitoreo de indicadores básicos. Cuando esta gestión depende de la memoria o de anotaciones dispersas, aumentan los olvidos y el desgaste del cuidador (*burnout*).
 
@@ -36,7 +36,7 @@ El cuidado cotidiano de un adulto mayor exige coordinar horarios de medicación,
 
 ---
 
-## Arquitectura y Stack Tecnológico
+## 2. Arquitectura y Stack Tecnológico
 
 El sistema implementa una arquitectura en capas basada en **MVVM (Model-View-ViewModel) + Repository**, garantizando el desacoplamiento entre la interfaz declarativa, la lógica de negocio y la persistencia local.
 
