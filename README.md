@@ -95,7 +95,7 @@ Siguiendo prácticas de **Gestión de Configuración de Software (SCM)**, el rep
 | **Perfil del Adulto Mayor y Cuidador** | RF-009, RF-010, RF-011 | Nicolás | ✅ Integrado |
 | **Gestión de Actividades y Rutina Diaria** | RF-001 a RF-005, RF-018 | Héctor | ✅ Integrado |
 | **Mediciones y Alertas Preventivas** | RF-013, RF-014, RF-015 | Héctor | ✅ Integrado |
-| **Agenda de Citas y Notificaciones** | RF-006, RF-007, RF-008, RF-012 | David | 🔄 En desarrollo |
+| **Agenda de Citas y Notificaciones** | RF-006, RF-007, RF-008, RF-012 | David | ✅ Integrado |
 | **Aseguramiento de Calidad (QA)** | TC-MOD, TC-INT, TC-SYS | Jimena | 🔄 En ejecución |
 
 ## 5. Esquema de Base de Datos
