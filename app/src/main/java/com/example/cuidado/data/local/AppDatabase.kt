@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [ActivityEntity::class, ActivityLogEntity::class, ProfileEntity::class, CaregiverEntity::class],
-    version = 3,
+    entities = [ActivityEntity::class, ActivityLogEntity::class, ProfileEntity::class, CaregiverEntity::class, MedicionEntity::class, RangoMedicionEntity::class, CitaEntity::class],
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -17,6 +17,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
     abstract fun activityLogDao(): ActivityLogDao
     abstract fun profileDao(): ProfileDao
+    abstract fun medicionDao(): MedicionDao
+    abstract fun citaDao(): CitaDao
 
     companion object {
         @Volatile
@@ -49,6 +51,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE activity_logs ADD COLUMN notes TEXT NOT NULL DEFAULT ''")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `mediciones` (`id` TEXT NOT NULL, `tipo` TEXT NOT NULL, `valor` REAL NOT NULL, `fecha` TEXT NOT NULL, `hora` TEXT NOT NULL, `notas` TEXT NOT NULL, PRIMARY KEY(`id`))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `rangos_medicion` (`tipo` TEXT NOT NULL, `valorMin` REAL NOT NULL, `valorMax` REAL NOT NULL, `umbralConsecutivo` INTEGER NOT NULL, PRIMARY KEY(`tipo`))")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `CITA` (`lIdCita` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `lIdPerfil` INTEGER NOT NULL, `dtFechaHora` INTEGER NOT NULL, `strEspecialista` TEXT NOT NULL, `strUbicacion` TEXT NOT NULL, `strNotas` TEXT NOT NULL)")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -56,7 +72,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "cuidado_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance

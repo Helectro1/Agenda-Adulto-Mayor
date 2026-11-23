@@ -1,43 +1,46 @@
 package com.example.cuidado.ui.screens.activities
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cuidado.R
+import com.example.cuidado.data.model.Activity
 import com.example.cuidado.ui.components.ActivityCard
 
 @Composable
 fun ActivitiesScreen(
     onAddActivity: () -> Unit,
+    onEditActivity: (String) -> Unit,
     viewModel: ActivitiesViewModel = viewModel()
 ) {
     val activities by viewModel.activities.collectAsState()
+    var activityToDelete by remember { mutableStateOf<Activity?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -87,9 +90,8 @@ fun ActivitiesScreen(
 
                 ActivityCard(
                     activity = activity,
-                    onOptionClick = {
-                        // Posteriormente: menú editar/eliminar.
-                    }
+                    onEdit = { onEditActivity(activity.id) },
+                    onDelete = { activityToDelete = activity }
                 )
             }
 
@@ -99,5 +101,30 @@ fun ActivitiesScreen(
                 )
             }
         }
+    }
+
+    if (activityToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { activityToDelete = null },
+            title = { Text("Eliminar actividad", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+            text = { Text("¿Estás seguro de eliminar '${activityToDelete?.name}'? Esta acción no se puede deshacer.", fontSize = 16.sp) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        activityToDelete?.let { viewModel.deleteActivity(it) }
+                        activityToDelete = null
+                    }
+                ) {
+                    Text("Eliminar", fontSize = 16.sp)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { activityToDelete = null }
+                ) {
+                    Text("Cancelar", fontSize = 16.sp)
+                }
+            }
+        )
     }
 }

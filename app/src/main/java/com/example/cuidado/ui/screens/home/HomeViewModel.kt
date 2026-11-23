@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cuidado.data.model.Activity
 import com.example.cuidado.data.repository.ActivityRepository
+import com.example.cuidado.data.repository.ProfileRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -28,6 +30,14 @@ class HomeViewModel : ViewModel() {
 
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val timeFormatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+    val profileName: StateFlow<String> = ProfileRepository.getProfile()
+        .map { profile -> profile?.name?.takeIf { it.isNotBlank() } ?: "Sin perfil registrado" }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "Sin perfil registrado"
+        )
 
     /**
      * Lista de actividades para hoy con su estado de cumplimiento.
@@ -58,6 +68,21 @@ class HomeViewModel : ViewModel() {
                 activityId = activity.id,
                 date = getCurrentDate(),
                 time = getCurrentTime()
+            )
+        }
+    }
+
+    /**
+     * Registra el estado y notas de una actividad para hoy.
+     */
+    fun markActivityStatus(activity: Activity, status: String, notes: String) {
+        viewModelScope.launch {
+            ActivityRepository.markActivityStatus(
+                activityId = activity.id,
+                date = getCurrentDate(),
+                status = status,
+                time = getCurrentTime(),
+                notes = notes
             )
         }
     }

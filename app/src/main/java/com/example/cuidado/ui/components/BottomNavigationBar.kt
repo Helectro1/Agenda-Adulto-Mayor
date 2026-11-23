@@ -1,6 +1,8 @@
 package com.example.cuidado.ui.components
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -38,6 +40,16 @@ fun BottomNavigationBar(
             route = Routes.ACTIVITIES,
             label = "Actividades",
             icon = Icons.Default.List
+        ),
+        BottomNavigationItem(
+            route = Routes.AGENDA,
+            label = "Agenda",
+            icon = Icons.Default.Event
+        ),
+        BottomNavigationItem(
+            route = Routes.MEDICIONES,
+            label = "Mediciones",
+            icon = Icons.Default.Favorite
         ),
         BottomNavigationItem(
             route = Routes.HISTORY,

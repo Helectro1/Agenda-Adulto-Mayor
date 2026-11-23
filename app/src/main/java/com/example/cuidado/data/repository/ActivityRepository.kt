@@ -52,6 +52,13 @@ object ActivityRepository {
     }
 
     /**
+     * Obtiene una actividad por su ID.
+     */
+    suspend fun getActivityById(id: String): Activity? = withContext(Dispatchers.IO) {
+        activityDao.getActivityById(id)?.toDomain()
+    }
+
+    /**
      * Agrega una nueva actividad a Room.
      */
     suspend fun addActivity(activity: Activity) = withContext(Dispatchers.IO) {
@@ -91,6 +98,20 @@ object ActivityRepository {
             date = date,
             status = "COMPLETED",
             executionTime = time
+        )
+        activityLogDao.insertLog(log.toEntity())
+    }
+
+    /**
+     * Registra el estado de una actividad (COMPLETED, SKIPPED, etc.) con notas opcionales.
+     */
+    suspend fun markActivityStatus(activityId: String, date: String, status: String, time: String, notes: String) = withContext(Dispatchers.IO) {
+        val log = ActivityLog(
+            activityId = activityId,
+            date = date,
+            status = status,
+            executionTime = time,
+            notes = notes
         )
         activityLogDao.insertLog(log.toEntity())
     }

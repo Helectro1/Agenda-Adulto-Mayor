@@ -7,6 +7,7 @@ import com.example.cuidado.data.repository.ActivityRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel para la pantalla de gestión de actividades.
@@ -22,4 +23,10 @@ class ActivitiesViewModel : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun deleteActivity(activity: Activity) {
+        viewModelScope.launch {
+            ActivityRepository.deleteActivity(activity)
+        }
+    }
 }

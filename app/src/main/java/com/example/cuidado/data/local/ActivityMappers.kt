@@ -35,7 +35,8 @@ fun ActivityLogEntity.toDomain(): ActivityLog {
         activityId = activityId,
         date = date,
         status = status,
-        executionTime = executionTime
+        executionTime = executionTime,
+        notes = notes
     )
 }
 
@@ -45,6 +46,7 @@ fun ActivityLog.toEntity(): ActivityLogEntity {
         activityId = activityId,
         date = date,
         status = status,
-        executionTime = executionTime
+        executionTime = executionTime,
+        notes = notes
     )
 }
