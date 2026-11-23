@@ -95,6 +95,9 @@ fun CuidaNavGraph(
             AddActivityScreen(
                 onSave = {
                     navController.popBackStack()
+                },
+                onCancel = {
+                    navController.popBackStack()
                 }
             )
         }

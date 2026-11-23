@@ -25,3 +25,15 @@ data class Activity(
     val isActive: Boolean = true,
     val color: Int? = null
 )
+
+fun parseTimeToMinutes(timeStr: String): Int {
+    val parts = timeStr.trim().split(":")
+    if (parts.size == 2) {
+        val h = parts[0].toIntOrNull()
+        val m = parts[1].toIntOrNull()
+        if (h != null && m != null && h in 0..23 && m in 0..59) {
+            return h * 60 + m
+        }
+    }
+    return Int.MAX_VALUE
+}

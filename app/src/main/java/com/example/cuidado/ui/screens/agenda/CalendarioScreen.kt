@@ -160,16 +160,48 @@ fun CalendarioScreen(
             }
 
             item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Próximas citas programadas (${estadoUi.lstCitasDelMes.size})",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            if (estadoUi.lstCitasDelMes.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Text(
+                            text = "No hay citas programadas para este mes.",
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            } else {
+                items(estadoUi.lstCitasDelMes) { cita ->
+                    TarjetaCita(
+                        objCita = cita,
+                        onEliminar = { vmCita.eliminarCita(cita.lIdCita) }
+                    )
+                }
+            }
+
+            item {
                 val formatoFecha = SimpleDateFormat("EEEE d 'de' MMMM", Locale("es", "MX"))
                 val fechaTexto = formatoFecha.format(Date(estadoUi.dtFechaSeleccionada))
                     .replaceFirstChar { it.uppercase() }
 
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Eventos: $fechaTexto",
+                    text = "Eventos del día: $fechaTexto",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 8.dp)
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -325,8 +357,8 @@ private fun CuadriculaMensual(
 
 @Composable
 private fun TarjetaCita(objCita: CitaEntity, onEliminar: () -> Unit) {
-    val formatoHora = SimpleDateFormat("hh:mm a", Locale("es", "MX"))
-    val horaTexto = formatoHora.format(Date(objCita.dtFechaHora))
+    val formatoFechaHora = SimpleDateFormat("dd/MM - hh:mm a", Locale("es", "MX"))
+    val fechaHoraTexto = formatoFechaHora.format(Date(objCita.dtFechaHora))
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -347,7 +379,7 @@ private fun TarjetaCita(objCita: CitaEntity, onEliminar: () -> Unit) {
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "$horaTexto - ${objCita.strEspecialista}",
+                    text = "$fechaHoraTexto - ${objCita.strEspecialista}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )

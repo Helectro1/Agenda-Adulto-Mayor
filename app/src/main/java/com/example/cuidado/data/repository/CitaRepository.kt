@@ -4,6 +4,7 @@ import com.example.cuidado.data.local.CitaDao
 import com.example.cuidado.data.local.CitaEntity
 import com.example.cuidado.interfaces.datos.iCitaRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 
@@ -47,6 +48,10 @@ class CitaRepository(
 
     suspend fun obtenerProximasCitas(dtInicio: Long, dtFin: Long): List<CitaEntity> = withContext(Dispatchers.IO) {
         objCitaDao.obtenerCitasEnRango(dtInicio, dtFin)
+    }
+
+    fun observarProximasCitas(ahora: Long, limite: Long): Flow<List<CitaEntity>> {
+        return objCitaDao.observarProximasCitas(ahora, limite)
     }
 
     override suspend fun eliminarCita(lIdCita: Long): Boolean = withContext(Dispatchers.IO) {

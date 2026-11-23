@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cuidado.data.model.Activity
+import com.example.cuidado.data.model.parseTimeToMinutes
 import com.example.cuidado.data.repository.ActivityRepository
 import com.example.cuidado.data.repository.ProfileRepository
 import com.example.cuidado.servicios.NotificacionScheduler
@@ -19,9 +20,12 @@ import kotlinx.coroutines.launch
 class ActivitiesViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
-     * Lista de actividades obtenida desde el repositorio.
+     * Lista de actividades obtenida desde el repositorio y ordenada cronológicamente por hora.
      */
     val activities: StateFlow<List<Activity>> = ActivityRepository.getActivities()
+        .map { list ->
+            list.sortedBy { parseTimeToMinutes(it.time) }
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
