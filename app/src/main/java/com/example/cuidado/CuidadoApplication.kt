@@ -3,6 +3,7 @@ package com.example.cuidado
 import android.app.Application
 import com.example.cuidado.data.local.AppDatabase
 import com.example.cuidado.data.repository.ActivityRepository
+import com.example.cuidado.data.repository.CitaRepository
 import com.example.cuidado.data.repository.MedicionRepository
 import com.example.cuidado.data.repository.ProfileRepository
 
@@ -19,5 +20,6 @@ class CuidadoApplication : Application() {
         )
         ProfileRepository.initialize(database.profileDao())
         MedicionRepository.initialize(database.medicionDao())
+        CitaRepository.initialize(database.citaDao())
     }
 }
