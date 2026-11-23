@@ -18,19 +18,24 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,22 +51,32 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cuidado.R
+import com.example.cuidado.data.local.CitaEntity
 import com.example.cuidado.data.model.Activity
 import com.example.cuidado.ui.components.ActivityCard
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onAddActivity: () -> Unit,
+    onAddCita: () -> Unit = {},
+    onAddMedicion: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val activities by viewModel.activities.collectAsState()
     val profileName by viewModel.profileName.collectAsState()
+    val proximasCitas by viewModel.proximasCitas.collectAsState()
     var selectedActivityForLog by remember { mutableStateOf<Activity?>(null) }
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onAddActivity
+                onClick = { showBottomSheet = true }
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -90,7 +105,7 @@ fun HomeScreen(
                 )
 
                 Text(
-                    text = "Jueves, 27 de agosto",
+                    text = SimpleDateFormat("EEEE, d 'de' MMMM", Locale.forLanguageTag("es-MX")).format(Date()),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -105,6 +120,37 @@ fun HomeScreen(
                 )
             }
 
+            // Próximas citas (7 días)
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Próximas citas (7 días)",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            if (proximasCitas.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            text = "No hay citas médicas programadas en los próximos 7 días.",
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            } else {
+                items(proximasCitas) { cita ->
+                    ProximaCitaCard(cita = cita)
+                }
+            }
+
             // Título de actividades
             item {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -116,7 +162,7 @@ fun HomeScreen(
                 )
             }
 
-            // Lista de actividades
+            // Lista de actividades pendientes
             items(activities) { itemState ->
 
                 ActivityCard(
@@ -138,6 +184,80 @@ fun HomeScreen(
         }
     }
 
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showBottomSheet = false },
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Creación rápida",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Button(
+                    onClick = {
+                        showBottomSheet = false
+                        onAddActivity()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Nueva actividad", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = {
+                        showBottomSheet = false
+                        onAddCita()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Event,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Nueva cita", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = {
+                        showBottomSheet = false
+                        onAddMedicion()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text("Nueva medición", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+
     if (selectedActivityForLog != null) {
         ActivityLogDialog(
             activity = selectedActivityForLog!!,
@@ -147,6 +267,46 @@ fun HomeScreen(
                 selectedActivityForLog = null
             }
         )
+    }
+}
+
+@Composable
+private fun ProximaCitaCard(cita: CitaEntity) {
+    val formatoFechaHora = SimpleDateFormat("dd/MM/yyyy hh:mm a", Locale.forLanguageTag("es-MX"))
+    val fechaTexto = formatoFechaHora.format(Date(cita.dtFechaHora))
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = cita.strEspecialista,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Fecha y hora: $fechaTexto",
+                fontSize = 16.sp
+            )
+            Text(
+                text = "Ubicación: ${cita.strUbicacion}",
+                fontSize = 16.sp
+            )
+            if (cita.strNotas.isNotBlank()) {
+                Text(
+                    text = "Notas: ${cita.strNotas}",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

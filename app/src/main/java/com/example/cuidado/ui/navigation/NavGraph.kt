@@ -22,6 +22,7 @@ import com.example.cuidado.ui.screens.agenda.CitaViewModel
 import com.example.cuidado.ui.screens.agenda.CitaViewModelFactory
 import com.example.cuidado.ui.screens.history.HistoryScreen
 import com.example.cuidado.ui.screens.home.HomeScreen
+import com.example.cuidado.ui.screens.mediciones.MedicionFormScreen
 import com.example.cuidado.ui.screens.mediciones.MedicionesScreen
 import com.example.cuidado.ui.screens.profile.ProfileOverviewScreen
 
@@ -32,6 +33,7 @@ object Routes {
     const val ADD_ACTIVITY_PARAM = "add_activity?activityId={activityId}"
     const val AGENDA = "agenda"
     const val NUEVA_CITA = "nueva_cita/{fecha}"
+    const val NUEVA_MEDICION = "nueva_medicion"
     const val HISTORY = "history"
     const val PROFILE = "profile"
     const val MEDICIONES = "mediciones"
@@ -61,6 +63,12 @@ fun CuidaNavGraph(
             HomeScreen(
                 onAddActivity = {
                     navController.navigate(Routes.addActivity())
+                },
+                onAddCita = {
+                    navController.navigate(Routes.nuevaCita(System.currentTimeMillis()))
+                },
+                onAddMedicion = {
+                    navController.navigate(Routes.NUEVA_MEDICION)
                 }
             )
         }
@@ -148,6 +156,12 @@ fun CuidaNavGraph(
 
         composable(Routes.MEDICIONES) {
             MedicionesScreen()
+        }
+
+        composable(Routes.NUEVA_MEDICION) {
+            MedicionFormScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(Routes.PROFILE) {

@@ -40,6 +40,7 @@ fun ActivitiesScreen(
     viewModel: ActivitiesViewModel = viewModel()
 ) {
     val activities by viewModel.activities.collectAsState()
+    val routineTitle by viewModel.routineTitle.collectAsState()
     var activityToDelete by remember { mutableStateOf<Activity?>(null) }
 
     Scaffold(
@@ -76,7 +77,7 @@ fun ActivitiesScreen(
                 )
 
                 Text(
-                    text = stringResource(R.string.maria_routine),
+                    text = routineTitle,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

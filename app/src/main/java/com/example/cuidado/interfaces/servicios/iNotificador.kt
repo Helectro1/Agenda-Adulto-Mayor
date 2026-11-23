@@ -15,4 +15,6 @@ data class iRecordatorio(
 interface iNotificador {
     fun Recordatorio_Programar(objRecordatorio: iRecordatorio)
     fun Recordatorio_Cancelar(lIdOrigen: Long, eOrigen: OrigenRecordatorio = OrigenRecordatorio.CITA)
+    fun Recordatorio_ProgramarActividadDiaria(idActividad: String, titulo: String, horaStr: String)
+    fun Recordatorio_CancelarActividadDiaria(idActividad: String)
 }

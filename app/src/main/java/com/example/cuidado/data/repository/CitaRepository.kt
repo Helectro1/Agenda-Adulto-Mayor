@@ -45,6 +45,10 @@ class CitaRepository(
         objCitaDao.obtenerPorMes(dtInicioMes, dtFinMes)
     }
 
+    suspend fun obtenerProximasCitas(dtInicio: Long, dtFin: Long): List<CitaEntity> = withContext(Dispatchers.IO) {
+        objCitaDao.obtenerCitasEnRango(dtInicio, dtFin)
+    }
+
     override suspend fun eliminarCita(lIdCita: Long): Boolean = withContext(Dispatchers.IO) {
         objCitaDao.eliminarCita(lIdCita) > 0
     }

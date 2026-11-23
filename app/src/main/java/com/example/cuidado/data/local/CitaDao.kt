@@ -17,6 +17,9 @@ interface CitaDao {
     @Query("SELECT * FROM CITA WHERE dtFechaHora >= :dtInicioMes AND dtFechaHora <= :dtFinMes ORDER BY dtFechaHora ASC")
     fun obtenerPorMes(dtInicioMes: Long, dtFinMes: Long): List<CitaEntity>
 
+    @Query("SELECT * FROM CITA WHERE dtFechaHora >= :dtInicio AND dtFechaHora <= :dtFin ORDER BY dtFechaHora ASC")
+    fun obtenerCitasEnRango(dtInicio: Long, dtFin: Long): List<CitaEntity>
+
     @Query("DELETE FROM CITA WHERE lIdCita = :lIdCita")
     fun eliminarCita(lIdCita: Long): Int
 }

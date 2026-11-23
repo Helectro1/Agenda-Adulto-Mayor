@@ -2,11 +2,15 @@ package com.example.cuidado.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.cuidado.data.local.CitaEntity
 import com.example.cuidado.data.model.Activity
 import com.example.cuidado.data.repository.ActivityRepository
+import com.example.cuidado.data.repository.CitaRepository
 import com.example.cuidado.data.repository.ProfileRepository
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -14,6 +18,7 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 /**
  * Estado de una actividad en la pantalla de inicio, incluyendo si ya fue realizada.
@@ -40,17 +45,19 @@ class HomeViewModel : ViewModel() {
         )
 
     /**
-     * Lista de actividades para hoy con su estado de cumplimiento.
+     * Lista de actividades pendientes para hoy (oculta las que ya tienen COMPLETED hoy).
      */
     val activities: StateFlow<List<ActivityItemState>> = combine(
         ActivityRepository.getActivities(),
         ActivityRepository.getLogsForDate(getCurrentDate())
     ) { allActivities, logs ->
-        val completedIds = logs.map { it.activityId }.toSet()
-        allActivities.map { activity ->
+        val completedIds = logs.filter { it.status == "COMPLETED" }.map { it.activityId }.toSet()
+        allActivities.filter { activity ->
+            !completedIds.contains(activity.id)
+        }.map { activity ->
             ActivityItemState(
                 activity = activity,
-                isCompleted = completedIds.contains(activity.id)
+                isCompleted = false
             )
         }
     }.stateIn(
@@ -58,6 +65,26 @@ class HomeViewModel : ViewModel() {
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = emptyList()
     )
+
+    private val _proximasCitas = MutableStateFlow<List<CitaEntity>>(emptyList())
+    val proximasCitas: StateFlow<List<CitaEntity>> = _proximasCitas.asStateFlow()
+
+    init {
+        cargarProximasCitas()
+    }
+
+    fun cargarProximasCitas() {
+        viewModelScope.launch {
+            try {
+                val ahora = System.currentTimeMillis()
+                val limite = ahora + TimeUnit.DAYS.toMillis(7)
+                val citas = CitaRepository.getInstance().obtenerProximasCitas(ahora, limite)
+                _proximasCitas.value = citas
+            } catch (e: Exception) {
+                _proximasCitas.value = emptyList()
+            }
+        }
+    }
 
     /**
      * Marca una actividad como realizada hoy.
@@ -69,6 +96,7 @@ class HomeViewModel : ViewModel() {
                 date = getCurrentDate(),
                 time = getCurrentTime()
             )
+            cargarProximasCitas()
         }
     }
 
@@ -84,6 +112,7 @@ class HomeViewModel : ViewModel() {
                 time = getCurrentTime(),
                 notes = notes
             )
+            cargarProximasCitas()
         }
     }
 

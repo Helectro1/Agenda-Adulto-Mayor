@@ -1,10 +1,12 @@
 package com.example.cuidado.ui.screens.activities
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.cuidado.data.model.Activity
 import com.example.cuidado.data.repository.ActivityRepository
+import com.example.cuidado.servicios.NotificacionScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,8 +28,9 @@ data class AddActivityUiState(
  * ViewModel para gestionar el formulario de nueva o existente actividad.
  */
 class AddActivityViewModel(
+    application: Application,
     savedStateHandle: SavedStateHandle
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val activityId: String? = savedStateHandle.get<String>("activityId")
 
@@ -88,7 +91,7 @@ class AddActivityViewModel(
     }
 
     /**
-     * Guarda o actualiza la actividad en el repositorio centralizado.
+     * Guarda o actualiza la actividad en el repositorio centralizado y programa su recordatorio diario.
      */
     fun saveActivity() {
         val state = _uiState.value
@@ -102,6 +105,7 @@ class AddActivityViewModel(
                 .joinToString(",")
 
             viewModelScope.launch {
+                val notificador = NotificacionScheduler(getApplication())
                 if (!activityId.isNullOrBlank()) {
                     val existing = ActivityRepository.getActivityById(activityId)
                     val updated = (existing ?: Activity(id = activityId, name = state.name, time = state.hour)).copy(
@@ -110,6 +114,7 @@ class AddActivityViewModel(
                         repeatDays = repeatDays
                     )
                     ActivityRepository.updateActivity(updated)
+                    notificador.Recordatorio_ProgramarActividadDiaria(activityId, state.name, state.hour)
                 } else {
                     val newActivity = Activity(
                         name = state.name,
@@ -117,6 +122,7 @@ class AddActivityViewModel(
                         repeatDays = repeatDays
                     )
                     ActivityRepository.addActivity(newActivity)
+                    notificador.Recordatorio_ProgramarActividadDiaria(newActivity.id, state.name, state.hour)
                 }
             }
         }
