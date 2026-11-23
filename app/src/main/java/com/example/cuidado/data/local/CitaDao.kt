@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface CitaDao {
@@ -19,6 +20,9 @@ interface CitaDao {
 
     @Query("SELECT * FROM CITA WHERE dtFechaHora >= :dtInicio AND dtFechaHora <= :dtFin ORDER BY dtFechaHora ASC")
     fun obtenerCitasEnRango(dtInicio: Long, dtFin: Long): List<CitaEntity>
+
+    @Query("SELECT * FROM CITA WHERE dtFechaHora >= :ahora AND dtFechaHora <= :limite ORDER BY dtFechaHora ASC")
+    fun observarProximasCitas(ahora: Long, limite: Long): Flow<List<CitaEntity>>
 
     @Query("DELETE FROM CITA WHERE lIdCita = :lIdCita")
     fun eliminarCita(lIdCita: Long): Int
