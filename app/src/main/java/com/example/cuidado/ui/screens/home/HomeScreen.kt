@@ -174,26 +174,37 @@ private fun ActivityLogDialog(
             }
         },
         confirmButton = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Button(
                     onClick = { onConfirm("COMPLETED", notes) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("Marcar como Realizada", fontSize = 16.sp)
                 }
                 OutlinedButton(
                     onClick = { onConfirm("SKIPPED", notes) },
-                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                 ) {
                     Text("Marcar como Omitida", fontSize = 16.sp)
                 }
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                ) {
+                    Text("Cancelar", fontSize = 16.sp)
+                }
             }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) {
-                Text("Cancelar", fontSize = 16.sp)
-            }
-        }
+        dismissButton = null
     )
 }
 
