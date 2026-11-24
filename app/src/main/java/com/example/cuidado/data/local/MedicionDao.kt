@@ -25,5 +25,5 @@ interface MedicionDao {
     fun getRangoByType(tipo: String): RangoMedicionEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun saveRango(rango: RangoMedicionEntity)
+    fun insertOrUpdateRango(rango: RangoMedicionEntity): Long
 }

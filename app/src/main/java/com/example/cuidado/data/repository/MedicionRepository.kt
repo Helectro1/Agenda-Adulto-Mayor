@@ -32,6 +32,10 @@ object MedicionRepository {
         medicionDao.getRangoByType(tipo)?.toDomain() ?: getDefaultRango(tipo)
     }
 
+    suspend fun saveRango(rango: RangoMedicion) = withContext(Dispatchers.IO) {
+        medicionDao.insertOrUpdateRango(rango.toEntity())
+    }
+
     private fun getDefaultRango(tipo: String): RangoMedicion {
         return when (tipo.lowercase()) {
             "glucosa" -> RangoMedicion(tipo, 70.0, 140.0, 3)
