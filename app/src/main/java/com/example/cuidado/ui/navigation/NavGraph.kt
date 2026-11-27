@@ -80,6 +80,9 @@ fun CuidaNavGraph(
                 },
                 onEditActivity = { activityId ->
                     navController.navigate(Routes.addActivity(activityId))
+                },
+                onNavigateToHistory = {
+                    navController.navigate(Routes.HISTORY)
                 }
             )
         }
@@ -154,7 +157,11 @@ fun CuidaNavGraph(
         }
 
         composable(Routes.HISTORY) {
-            HistoryScreen()
+            HistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
 
         composable(Routes.MEDICIONES) {

@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cuidado.data.model.Activity
+import com.example.cuidado.data.model.formatActivityTime
 
 @Composable
 fun ActivityCard(
@@ -106,7 +107,7 @@ fun ActivityCard(
                 )
 
                 Text(
-                    text = activity.time,
+                    text = formatActivityTime(activity.time),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -21,7 +21,7 @@ class CuidadoApplication : Application() {
             dao = database.activityDao(),
             logDao = database.activityLogDao()
         )
-        ProfileRepository.initialize(database.profileDao())
+        ProfileRepository.initialize(this, database.profileDao())
         MedicionRepository.initialize(database.medicionDao())
         CitaRepository.initialize(database.citaDao())
 

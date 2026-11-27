@@ -11,5 +11,6 @@ data class CitaEntity(
     val dtFechaHora: Long,
     val strEspecialista: String,
     val strUbicacion: String,
-    val strNotas: String = ""
+    val strNotas: String = "",
+    val strCategoria: String = "General"
 )

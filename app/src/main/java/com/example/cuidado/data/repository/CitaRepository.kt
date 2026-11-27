@@ -15,6 +15,14 @@ class CitaRepository(
         objCitaDao.insertarCita(objCita)
     }
 
+    override suspend fun actualizarCita(cita: CitaEntity) = withContext(Dispatchers.IO) {
+        objCitaDao.actualizarCita(cita)
+    }
+
+    override fun observarTodasLasCitas(): Flow<List<CitaEntity>> {
+        return objCitaDao.observarTodasLasCitas()
+    }
+
     override suspend fun obtenerPorFecha(dtFecha: Long): List<CitaEntity> = withContext(Dispatchers.IO) {
         val cal = Calendar.getInstance().apply { timeInMillis = dtFecha }
         cal.set(Calendar.HOUR_OF_DAY, 0)

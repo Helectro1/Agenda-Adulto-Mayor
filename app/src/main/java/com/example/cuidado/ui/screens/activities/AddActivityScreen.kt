@@ -1,33 +1,19 @@
 package com.example.cuidado.ui.screens.activities
 
-import android.app.TimePickerDialog
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cuidado.R
 import com.example.cuidado.ui.components.CuidaFormScaffold
-import java.util.Calendar
+import com.example.cuidado.ui.components.CuidaTimePickerDialog
 import java.util.Locale
 
 @Composable
@@ -36,8 +22,8 @@ fun AddActivityScreen(
     onCancel: () -> Unit = {},
     viewModel: AddActivityViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    var showTimePicker by remember { mutableStateOf(false) }
 
     val days = listOf(
         "L", "M", "X", "J", "V", "S", "D"
@@ -78,7 +64,42 @@ fun AddActivityScreen(
         )
 
         Text(
-            text = stringResource(R.string.hour_label)
+            text = "Modo de programación",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = !uiState.isInterval,
+                onClick = { viewModel.onIntervalModeChange(false) },
+                label = { Text("Hora fija del día") },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
+            )
+            FilterChip(
+                selected = uiState.isInterval,
+                onClick = { viewModel.onIntervalModeChange(true) },
+                label = { Text("Cada cierto tiempo") },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(20.dp)
+        )
+
+        Text(
+            text = if (uiState.isInterval) "Intervalo (Horas y Minutos)" else stringResource(R.string.hour_label)
         )
 
         Spacer(
@@ -86,32 +107,7 @@ fun AddActivityScreen(
         )
 
         OutlinedButton(
-            onClick = {
-                val cal = Calendar.getInstance()
-                val initialHour = if (uiState.hour.isNotBlank()) {
-                    val parts = uiState.hour.split(":")
-                    parts.getOrNull(0)?.toIntOrNull() ?: cal.get(Calendar.HOUR_OF_DAY)
-                } else {
-                    cal.get(Calendar.HOUR_OF_DAY)
-                }
-                val initialMinute = if (uiState.hour.isNotBlank()) {
-                    val parts = uiState.hour.split(":")
-                    parts.getOrNull(1)?.toIntOrNull() ?: cal.get(Calendar.MINUTE)
-                } else {
-                    cal.get(Calendar.MINUTE)
-                }
-
-                TimePickerDialog(
-                    context,
-                    { _, hourOfDay, minute ->
-                        val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute)
-                        viewModel.onHourChange(formattedTime)
-                    },
-                    initialHour,
-                    initialMinute,
-                    true
-                ).show()
-            },
+            onClick = { showTimePicker = true },
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp),
@@ -120,39 +116,62 @@ fun AddActivityScreen(
             Icon(Icons.Default.AccessTime, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (uiState.hour.isNotBlank()) "Hora: ${uiState.hour}" else "Seleccionar hora *",
+                text = if (uiState.hour.isNotBlank()) {
+                    if (uiState.isInterval) "Cada ${uiState.hour}" else "Hora: ${uiState.hour}"
+                } else {
+                    if (uiState.isInterval) "Seleccionar intervalo *" else "Seleccionar hora *"
+                },
                 fontSize = 18.sp
             )
         }
 
-        Spacer(
-            modifier = Modifier.height(24.dp)
-        )
+        if (showTimePicker) {
+            val parts = uiState.hour.split(":")
+            val h = parts.getOrNull(0)?.toIntOrNull() ?: if (uiState.isInterval) 2 else 8
+            val m = parts.getOrNull(1)?.toIntOrNull() ?: 0
+            CuidaTimePickerDialog(
+                initialHour = h,
+                initialMinute = m,
+                title = if (uiState.isInterval) "Seleccionar intervalo" else "Seleccionar hora",
+                onDismiss = { showTimePicker = false },
+                onConfirm = { hourOfDay, minute ->
+                    val formattedTime = String.format(Locale.getDefault(), "%02d:%02d", hourOfDay, minute)
+                    viewModel.onHourChange(formattedTime)
+                    showTimePicker = false
+                }
+            )
+        }
 
-        Text(
-            text = stringResource(R.string.repeat_label)
-        )
+        if (!uiState.isInterval) {
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
 
-        Spacer(
-            modifier = Modifier.height(12.dp)
-        )
+            Text(
+                text = stringResource(R.string.repeat_label)
+            )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+            Spacer(
+                modifier = Modifier.height(12.dp)
+            )
 
-            days.forEach { day ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
 
-                FilterChip(
-                    selected = day in uiState.selectedDays,
-                    onClick = {
-                        viewModel.toggleDay(day)
-                    },
-                    label = {
-                        Text(day)
-                    }
-                )
+                days.forEach { day ->
+
+                    FilterChip(
+                        selected = day in uiState.selectedDays,
+                        onClick = {
+                            viewModel.toggleDay(day)
+                        },
+                        label = {
+                            Text(day)
+                        }
+                    )
+                }
             }
         }
     }

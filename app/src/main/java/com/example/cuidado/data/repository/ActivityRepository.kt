@@ -80,6 +80,15 @@ object ActivityRepository {
     }
 
     /**
+     * Observa todos los registros de ejecución.
+     */
+    fun getAllLogs(): Flow<List<ActivityLog>> {
+        return activityLogDao.observeAllLogs().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
+    /**
      * Observa los registros de ejecución para una fecha específica.
      */
     fun getLogsForDate(date: String): Flow<List<ActivityLog>> {

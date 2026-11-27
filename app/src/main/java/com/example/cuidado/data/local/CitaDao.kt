@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -11,6 +12,12 @@ interface CitaDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertarCita(objCita: CitaEntity): Long
+
+    @Update
+    fun actualizarCita(cita: CitaEntity)
+
+    @Query("SELECT * FROM CITA ORDER BY dtFechaHora ASC")
+    fun observarTodasLasCitas(): Flow<List<CitaEntity>>
 
     @Query("SELECT * FROM CITA WHERE dtFechaHora >= :dtInicioDia AND dtFechaHora <= :dtFinDia ORDER BY dtFechaHora ASC")
     fun obtenerPorFecha(dtInicioDia: Long, dtFinDia: Long): List<CitaEntity>

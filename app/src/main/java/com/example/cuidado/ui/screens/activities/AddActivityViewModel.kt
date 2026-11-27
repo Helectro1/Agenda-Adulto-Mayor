@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 data class AddActivityUiState(
     val name: String = "",
     val hour: String = "",
+    val isInterval: Boolean = false,
     val selectedDays: Set<String> = emptySet(),
     val isFormValid: Boolean = false,
     val isEditing: Boolean = false
@@ -48,12 +49,16 @@ class AddActivityViewModel(
                         .mapNotNull { dayMappingReverse[it.trim()] }
                         .toSet()
 
+                    val isInterval = activity.time.startsWith("EVERY_")
+                    val rawTime = if (isInterval) activity.time.removePrefix("EVERY_") else activity.time
+
                     _uiState.update {
                         it.copy(
                             name = activity.name,
-                            hour = activity.time,
+                            hour = rawTime,
+                            isInterval = isInterval,
                             selectedDays = days,
-                            isFormValid = activity.name.isNotBlank() && activity.time.isNotBlank()
+                            isFormValid = activity.name.isNotBlank() && rawTime.isNotBlank()
                         )
                     }
                 }
@@ -79,6 +84,10 @@ class AddActivityViewModel(
         }
     }
 
+    fun onIntervalModeChange(isInterval: Boolean) {
+        _uiState.update { it.copy(isInterval = isInterval) }
+    }
+
     fun toggleDay(day: String) {
         _uiState.update { state ->
             val newDays = if (day in state.selectedDays) {
@@ -91,7 +100,7 @@ class AddActivityViewModel(
     }
 
     /**
-     * Guarda o actualiza la actividad en el repositorio centralizado y programa su recordatorio diario.
+     * Guarda o actualiza la actividad en el repositorio centralizado y programa su recordatorio exacto.
      */
     fun saveActivity() {
         val state = _uiState.value
@@ -99,30 +108,52 @@ class AddActivityViewModel(
             val dayMapping = mapOf(
                 "L" to "1", "M" to "2", "X" to "3", "J" to "4", "V" to "5", "S" to "6", "D" to "7"
             )
-            val repeatDays = state.selectedDays
-                .mapNotNull { dayMapping[it] }
-                .sorted()
-                .joinToString(",")
+            val repeatDays = if (state.isInterval) {
+                "1,2,3,4,5,6,7"
+            } else {
+                state.selectedDays
+                    .mapNotNull { dayMapping[it] }
+                    .sorted()
+                    .joinToString(",")
+            }
+
+            val timeToSave = if (state.isInterval) "EVERY_${state.hour}" else state.hour
 
             viewModelScope.launch {
                 val notificador = NotificacionScheduler(getApplication())
                 if (!activityId.isNullOrBlank()) {
                     val existing = ActivityRepository.getActivityById(activityId)
-                    val updated = (existing ?: Activity(id = activityId, name = state.name, time = state.hour)).copy(
+                    val updated = (existing ?: Activity(id = activityId, name = state.name, time = timeToSave)).copy(
                         name = state.name,
-                        time = state.hour,
+                        time = timeToSave,
                         repeatDays = repeatDays
                     )
                     ActivityRepository.updateActivity(updated)
-                    notificador.Recordatorio_ProgramarActividadDiaria(activityId, state.name, state.hour)
+                    if (state.isInterval) {
+                        val parts = state.hour.split(":")
+                        val totalMins = (parts.getOrNull(0)?.toLongOrNull() ?: 0L) * 60 + (parts.getOrNull(1)?.toLongOrNull() ?: 0L)
+                        if (totalMins > 0) {
+                            notificador.programarAlarmaIntervalo(activityId, state.name, totalMins)
+                        }
+                    } else {
+                        notificador.Recordatorio_ProgramarActividadDiaria(activityId, state.name, state.hour)
+                    }
                 } else {
                     val newActivity = Activity(
                         name = state.name,
-                        time = state.hour,
+                        time = timeToSave,
                         repeatDays = repeatDays
                     )
                     ActivityRepository.addActivity(newActivity)
-                    notificador.Recordatorio_ProgramarActividadDiaria(newActivity.id, state.name, state.hour)
+                    if (state.isInterval) {
+                        val parts = state.hour.split(":")
+                        val totalMins = (parts.getOrNull(0)?.toLongOrNull() ?: 0L) * 60 + (parts.getOrNull(1)?.toLongOrNull() ?: 0L)
+                        if (totalMins > 0) {
+                            notificador.programarAlarmaIntervalo(newActivity.id, state.name, totalMins)
+                        }
+                    } else {
+                        notificador.Recordatorio_ProgramarActividadDiaria(newActivity.id, state.name, state.hour)
+                    }
                 }
             }
         }

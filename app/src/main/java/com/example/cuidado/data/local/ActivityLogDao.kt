@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ActivityLogDao {
 
+    @Query("SELECT * FROM activity_logs")
+    fun observeAllLogs(): Flow<List<ActivityLogEntity>>
+
     @Query("SELECT * FROM activity_logs WHERE date = :date")
     fun observeLogsForDate(date: String): Flow<List<ActivityLogEntity>>
 

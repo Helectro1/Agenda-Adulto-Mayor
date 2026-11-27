@@ -11,10 +11,7 @@ import com.example.cuidado.interfaces.datos.iCitaRepository
 import com.example.cuidado.interfaces.servicios.OrigenRecordatorio
 import com.example.cuidado.interfaces.servicios.iNotificador
 import com.example.cuidado.interfaces.servicios.iRecordatorio
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
@@ -25,6 +22,10 @@ data class AgendaUiState(
     val lstCitasDelMes: List<CitaEntity> = emptyList(),
     val lstCitasDelDia: List<CitaEntity> = emptyList(),
     val lstActividadesActivas: List<ActividadResumen> = emptyList(),
+    val categoriasDisponibles: List<String> = listOf("General", "Cardiología", "Laboratorio"),
+    val categoriaSeleccionada: String? = null,
+    val proximasCitas: List<CitaEntity> = emptyList(),
+    val citasAnteriores: List<CitaEntity> = emptyList(),
     val strMensajeFeedback: String? = null,
     val bCargando: Boolean = false
 )
@@ -40,6 +41,34 @@ class CitaViewModel(
     val objEstadoUi: StateFlow<AgendaUiState> = _objEstadoUi.asStateFlow()
 
     init {
+        viewModelScope.launch {
+            combine(
+                objCitaRepository.observarTodasLasCitas(),
+                _objEstadoUi.map { it.categoriaSeleccionada }
+            ) { citas, filtroCat ->
+                val baseCategorias = listOf("General", "Cardiología", "Laboratorio")
+                val dynamicCategorias = citas.map { it.strCategoria }.distinct()
+                val categoriasDisponibles = (baseCategorias + dynamicCategorias).distinct()
+
+                val filtradas = if (filtroCat.isNullOrBlank() || filtroCat == "Todas") {
+                    citas
+                } else {
+                    citas.filter { it.strCategoria.equals(filtroCat, ignoreCase = true) }
+                }
+
+                val ahora = System.currentTimeMillis()
+                val proximas = filtradas.filter { it.dtFechaHora >= ahora }.sortedBy { it.dtFechaHora }
+                val anteriores = filtradas.filter { it.dtFechaHora < ahora }.sortedByDescending { it.dtFechaHora }
+
+                _objEstadoUi.update {
+                    it.copy(
+                        categoriasDisponibles = categoriasDisponibles,
+                        proximasCitas = proximas,
+                        citasAnteriores = anteriores
+                    )
+                }
+            }.collect {}
+        }
         cargarDatosIniciales()
     }
 
@@ -47,6 +76,11 @@ class CitaViewModel(
         val estado = _objEstadoUi.value
         Calendario_ObtenerMes(estado.nMesSeleccionado, estado.nAnioSeleccionado)
         Cita_ObtenerPorFecha(estado.dtFechaSeleccionada)
+    }
+
+    fun seleccionarCategoria(categoria: String?) {
+        val catReal = if (categoria == "Todas" || categoria.isNullOrBlank()) null else categoria
+        _objEstadoUi.update { it.copy(categoriaSeleccionada = catReal) }
     }
 
     fun Cita_Registrar(objCita: CitaEntity, onResultado: (Boolean) -> Unit = {}) {
@@ -87,6 +121,27 @@ class CitaViewModel(
             } else {
                 _objEstadoUi.update {
                     it.copy(strMensajeFeedback = "No se pudo guardar la cita en la base de datos")
+                }
+                onResultado(false)
+            }
+        }
+    }
+
+    fun Cita_ActualizarNotas(cita: CitaEntity, nuevasNotas: String, onResultado: (Boolean) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val citaActualizada = cita.copy(strNotas = nuevasNotas)
+                objCitaRepository.actualizarCita(citaActualizada)
+                _objEstadoUi.update {
+                    it.copy(strMensajeFeedback = "Notas actualizadas correctamente")
+                }
+                val estado = _objEstadoUi.value
+                Calendario_ObtenerMes(estado.nMesSeleccionado, estado.nAnioSeleccionado)
+                Cita_ObtenerPorFecha(estado.dtFechaSeleccionada)
+                onResultado(true)
+            } catch (e: Exception) {
+                _objEstadoUi.update {
+                    it.copy(strMensajeFeedback = "Error al actualizar las notas")
                 }
                 onResultado(false)
             }

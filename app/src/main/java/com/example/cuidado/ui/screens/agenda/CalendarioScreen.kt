@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cuidado.R
 import com.example.cuidado.data.local.CitaEntity
-import com.example.cuidado.interfaces.datos.ActividadResumen
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,8 +51,25 @@ fun CalendarioScreen(
         "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
     )
 
-    val diasConCitas = remember(estadoUi.lstCitasDelMes) {
-        estadoUi.lstCitasDelMes.map { cita ->
+    val categoriaFiltro = estadoUi.categoriaSeleccionada
+    val citasDelMesFiltradas = remember(estadoUi.lstCitasDelMes, categoriaFiltro) {
+        if (categoriaFiltro.isNullOrBlank() || categoriaFiltro == "Todas") {
+            estadoUi.lstCitasDelMes
+        } else {
+            estadoUi.lstCitasDelMes.filter { it.strCategoria.equals(categoriaFiltro, ignoreCase = true) }
+        }
+    }
+
+    val citasDelDiaFiltradas = remember(estadoUi.lstCitasDelDia, categoriaFiltro) {
+        if (categoriaFiltro.isNullOrBlank() || categoriaFiltro == "Todas") {
+            estadoUi.lstCitasDelDia
+        } else {
+            estadoUi.lstCitasDelDia.filter { it.strCategoria.equals(categoriaFiltro, ignoreCase = true) }
+        }
+    }
+
+    val diasConCitas = remember(citasDelMesFiltradas) {
+        citasDelMesFiltradas.map { cita ->
             Calendar.getInstance().apply { timeInMillis = cita.dtFechaHora }.get(Calendar.DAY_OF_MONTH)
         }.toSet()
     }
@@ -98,6 +114,7 @@ fun CalendarioScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Encabezado de navegación mensual y cuadrícula de calendario
             item {
                 Row(
                     modifier = Modifier
@@ -159,61 +176,42 @@ fun CalendarioScreen(
                 )
             }
 
+            // Fila horizontal (LazyRow) de FilterChip por categoría
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Próximas citas programadas (${estadoUi.lstCitasDelMes.size})",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+                Spacer(modifier = Modifier.height(4.dp))
+                val categorias = listOf("Todas") + estadoUi.categoriasDisponibles
+                val categoriaSeleccionada = estadoUi.categoriaSeleccionada ?: "Todas"
 
-            if (estadoUi.lstCitasDelMes.isEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                    ) {
-                        Text(
-                            text = "No hay citas programadas para este mes.",
-                            fontSize = 16.sp,
-                            modifier = Modifier.padding(16.dp)
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(categorias) { cat ->
+                        FilterChip(
+                            selected = categoriaSeleccionada.equals(cat, ignoreCase = true) || (cat == "Todas" && estadoUi.categoriaSeleccionada == null),
+                            onClick = { vmCita.seleccionarCategoria(cat) },
+                            label = { Text(cat) },
+                            modifier = Modifier.heightIn(min = 48.dp)
                         )
                     }
                 }
-            } else {
-                items(estadoUi.lstCitasDelMes) { cita ->
-                    TarjetaCita(
-                        objCita = cita,
-                        onEliminar = { vmCita.eliminarCita(cita.lIdCita) }
-                    )
-                }
             }
 
+            // Sección Citas del día seleccionado
             item {
-                val formatoFecha = SimpleDateFormat("EEEE d 'de' MMMM", Locale("es", "MX"))
+                val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale("es", "MX"))
                 val fechaTexto = formatoFecha.format(Date(estadoUi.dtFechaSeleccionada))
-                    .replaceFirstChar { it.uppercase() }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Eventos del día: $fechaTexto",
+                    text = "Citas del $fechaTexto (${citasDelDiaFiltradas.size})",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            item {
-                Text(
-                    text = "${stringResource(R.string.medical_appointments)} (${estadoUi.lstCitasDelDia.size})",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            if (estadoUi.lstCitasDelDia.isEmpty()) {
+            if (citasDelDiaFiltradas.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -227,39 +225,112 @@ fun CalendarioScreen(
                     }
                 }
             } else {
-                items(estadoUi.lstCitasDelDia) { cita ->
+                items(citasDelDiaFiltradas) { cita ->
+                    val ahora = System.currentTimeMillis()
+                    val esPasada = cita.dtFechaHora < ahora
+                    var showEditNotesDialog by remember { mutableStateOf(false) }
+
                     TarjetaCita(
                         objCita = cita,
-                        onEliminar = { vmCita.eliminarCita(cita.lIdCita) }
+                        onEliminar = { vmCita.eliminarCita(cita.lIdCita) },
+                        onClick = if (esPasada) { { showEditNotesDialog = true } } else null
                     )
+
+                    if (showEditNotesDialog) {
+                        EditarNotasCitaDialog(
+                            cita = cita,
+                            onDismiss = { showEditNotesDialog = false },
+                            onSave = { nuevasNotas ->
+                                vmCita.Cita_ActualizarNotas(cita, nuevasNotas)
+                                showEditNotesDialog = false
+                            }
+                        )
+                    }
                 }
             }
 
+            // Sección Próximas Citas
             item {
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = "${stringResource(R.string.daily_care_activities)} (${estadoUi.lstActividadesActivas.size})",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(top = 8.dp)
+                    text = "Próximas citas (${estadoUi.proximasCitas.size})",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
-            if (estadoUi.lstActividadesActivas.isEmpty()) {
+            if (estadoUi.proximasCitas.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                     ) {
                         Text(
-                            text = "No hay actividades registradas en la rutina.",
+                            text = "No hay próximas citas programadas.",
                             fontSize = 16.sp,
                             modifier = Modifier.padding(16.dp)
                         )
                     }
                 }
             } else {
-                items(estadoUi.lstActividadesActivas) { actividad ->
-                    TarjetaActividad(objActividad = actividad)
+                items(estadoUi.proximasCitas) { cita ->
+                    TarjetaCita(
+                        objCita = cita,
+                        onEliminar = { vmCita.eliminarCita(cita.lIdCita) },
+                        onClick = null
+                    )
+                }
+            }
+
+            // Sección Citas Anteriores
+            item {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Citas anteriores (${estadoUi.citasAnteriores.size})",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Toca cualquier cita pasada para ver o editar sus notas importantes.",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (estadoUi.citasAnteriores.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Text(
+                            text = "No hay citas anteriores registradas.",
+                            fontSize = 16.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            } else {
+                items(estadoUi.citasAnteriores) { cita ->
+                    var showEditNotesDialog by remember { mutableStateOf(false) }
+                    TarjetaCita(
+                        objCita = cita,
+                        onEliminar = { vmCita.eliminarCita(cita.lIdCita) },
+                        onClick = { showEditNotesDialog = true }
+                    )
+
+                    if (showEditNotesDialog) {
+                        EditarNotasCitaDialog(
+                            cita = cita,
+                            onDismiss = { showEditNotesDialog = false },
+                            onSave = { nuevasNotas ->
+                                vmCita.Cita_ActualizarNotas(cita, nuevasNotas)
+                                showEditNotesDialog = false
+                            }
+                        )
+                    }
                 }
             }
 
@@ -356,12 +427,18 @@ private fun CuadriculaMensual(
 }
 
 @Composable
-private fun TarjetaCita(objCita: CitaEntity, onEliminar: () -> Unit) {
-    val formatoFechaHora = SimpleDateFormat("dd/MM - hh:mm a", Locale("es", "MX"))
+private fun TarjetaCita(
+    objCita: CitaEntity,
+    onEliminar: () -> Unit,
+    onClick: (() -> Unit)? = null
+) {
+    val formatoFechaHora = SimpleDateFormat("dd/MM/yyyy - hh:mm a", Locale("es", "MX"))
     val fechaHoraTexto = formatoFechaHora.format(Date(objCita.dtFechaHora))
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
         Row(
@@ -378,10 +455,33 @@ private fun TarjetaCita(objCita: CitaEntity, onEliminar: () -> Unit) {
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = objCita.strEspecialista,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Text(
+                            text = objCita.strCategoria,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "$fechaHoraTexto - ${objCita.strEspecialista}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
+                    text = fechaHoraTexto,
+                    fontSize = 16.sp
                 )
                 Text(
                     text = "Ubicación: ${objCita.strUbicacion}",
@@ -390,11 +490,12 @@ private fun TarjetaCita(objCita: CitaEntity, onEliminar: () -> Unit) {
                 if (objCita.strNotas.isNotBlank()) {
                     Text(
                         text = "Notas: ${objCita.strNotas}",
-                        fontSize = 16.sp,
+                        fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+            Spacer(modifier = Modifier.width(8.dp))
             IconButton(
                 onClick = onEliminar,
                 modifier = Modifier.size(48.dp)
@@ -410,35 +511,39 @@ private fun TarjetaCita(objCita: CitaEntity, onEliminar: () -> Unit) {
 }
 
 @Composable
-private fun TarjetaActividad(objActividad: ActividadResumen) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Schedule,
-                contentDescription = null,
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.secondary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "${objActividad.strHora} - ${objActividad.strNombre}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${objActividad.eTipo}: ${objActividad.strDescripcion}",
-                    fontSize = 16.sp
+private fun EditarNotasCitaDialog(
+    cita: CitaEntity,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    var notas by remember { mutableStateOf(cita.strNotas) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Notas de la consulta (${cita.strEspecialista})", fontSize = 18.sp, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Edita las indicaciones, comentarios del especialista o acuerdos importantes:", fontSize = 14.sp)
+                OutlinedTextField(
+                    value = notas,
+                    onValueChange = { notas = it },
+                    label = { Text("Notas importantes") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4
                 )
             }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onSave(notas) }
+            ) {
+                Text("Guardar notas")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
         }
-    }
+    )
 }
